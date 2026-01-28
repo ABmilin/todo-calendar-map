@@ -47,7 +47,7 @@ export async function GET(req: Request) {
   // ✅ 識別できるUser-Agent（stock UAは不可）  [oai_citation:3‡OSMF Operations](https://operations.osmfoundation.org/policies/nominatim/?utm_source=chatgpt.com)
   // ※ <you>/<repo> と連絡先はあなたのものに置き換えて
   const UA =
-    "todo-calendar-map/1.0 (https://github.com/<you>/<repo>; contact: <mail>)";
+    "todo-calendar-map/1.0 (https://github.com/ABmilin/todo-calendar-map; contact: GitHub Issues)";
 
   try {
     const api = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(

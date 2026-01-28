@@ -1,80 +1,96 @@
 # TODO × Calendar × Map
 
-タスクを「いつ（カレンダー）・どこで（地図）・なにをするか（TODO）」まで、1画面で整理できるWebアプリです。  
-就活ポートフォリオとして、UI/UX・ドラッグ操作・地図連携・状態管理をまとめて実装しました。
-
-## Demo
-- URL: https://todo-calendar-map.vercel.app
-- Repo: https://github.com/ABmilin/todo-calendar-map
+タスクを **「いつ（カレンダー）・どこで（地図）・なにをする（TODO）」** まで、1画面で整理できる Web アプリです。  
+就活ポートフォリオとして「状態管理」「ドラッグ&ドロップ」「地図連携」「APIルート」をまとめて実装しました。
 
 ---
 
-## Features（できること）
-- タスク追加（期限・所要時間・メモ）
-- 未スケジュールタスクを **ドラッグ&ドロップで予定化**
-- カレンダーでタスクを選択 → 地図クリックで **場所を紐付け**
-- タスクの完了/未完了切替、削除、編集
-- localStorage 保存（リロードしても保持）
+## Demo / Repository
+
+- Demo: `https://todo-calendar-map.vercel.app`
+- Repository: `https://github.com/ABmilin/todo-calendar-map`
+
+---
+
+## Features
+
+- ✅ タスク追加（タイトル / 期限 / 所要時間 / メモ / 場所）
+- ✅ 未予定タスクをカレンダーへドラッグして予定化（FullCalendar）
+- ✅ カレンダー上のドラッグ移動・伸縮で時間調整
+- ✅ 地図クリックで場所選択 → 選択中タスクに場所を紐づけ（Leaflet）
+- ✅ 期限の見える化（※月表示：期限ラベル表示＆ドラッグで期限変更）
+- ✅ データはブラウザ内に保存（localStorage）
 
 ---
 
 ## How to Use（使い方）
+
 1. 左のフォームでタスクを追加します（期限・所要時間・メモは任意）
-2. 「未スケジュール」のタスクを、カレンダーへドラッグして予定化します
-3. TODO（またはカレンダー）でタスクを選択し、地図をクリックすると場所が紐づきます  
+2. 「未スケジュール」のタスクを **カレンダーへドラッグ**して予定化します
+3. TODO（またはカレンダー）でタスクを選択し、**地図をクリック**すると場所が紐づきます  
    ※「現在地へ」ボタンで現在地表示もできます（ブラウザの許可が必要）
 
 ### Calendar 操作
 - 通常クリック：編集対象として選択
-- Ctrl(⌘) + クリック：完了/未完了の切替
+- Ctrl(⌘) + クリック：完了 / 未完了の切替
 - Alt + クリック：削除（確認ダイアログあり）
 
 ---
 
-## Tech Stack（使用技術）
+## Tech Stack
+
 - Next.js (App Router) / TypeScript
-- Zustand（状態管理 / localStorage永続化）
-- FullCalendar（ドラッグ&ドロップによる予定管理）
+- Zustand（状態管理 + localStorage 永続化）
+- FullCalendar（ドラッグ&ドロップ予定管理）
 - Leaflet + react-leaflet（地図表示）
-- Tailwind CSS（UI）
+- Tailwind CSS
 
 ---
 
-## Implementation Notes（実装のポイント）
-- **タスクの状態管理**：ZustandでTask配列を集中管理し、追加/編集/完了/削除/予定化をStore経由で更新
-- **ドラッグ予定化**：TaskListで外部ドラッグを生成し、Calendarで受け取って scheduledStart を更新
-- **場所名の取得**：地図クリック座標を `/api/reverse-geocode` に送信し、サーバ側でNominatimへ reverse geocoding（場所名取得）
-- **データ保存**：タスクは localStorage に保存（サーバにタスク本文を保存しない設計）
+## Project Structure（ざっくり）
+
+- `src/components/TaskList.tsx`  
+  タスク追加・編集、未予定一覧、外部ドラッグ（→カレンダー）
+- `src/components/CalendarView.tsx`  
+  FullCalendar表示、予定化・移動・伸縮、期限表示（→期限ラベル）
+- `src/components/MapInner.tsx`  
+  地図表示、クリックで座標取得、逆ジオコーディング呼び出し、タスクへ紐づけ
+- `src/app/api/reverse-geocode/route.ts`  
+  Nominatim（OpenStreetMap）の Reverse Geocoding を呼ぶ API ルート
 
 ---
 
-## Privacy（プライバシー）
-- 位置情報はブラウザの許可が必要です（許可しなくてもアプリ自体は利用できます）。
-- 本アプリはタスクを localStorage に保存します（サーバへ保存しません）。
-- 逆ジオコーディング（場所名取得）のために、座標を外部サービスへ送信します（下記参照）。
+## Privacy / Data Handling（プライバシー）
+
+- 位置情報は **ブラウザの許可**が必要です。
+- タスクは **localStorage に保存**されます（サーバDBには保存しません）。
+- 位置情報やタスク内容をサーバへ保存しない設計です。  
+  ただし、場所名取得のために Reverse Geocoding を外部サービスへ問い合わせます（下記参照）。
+
+> 補足：localStorage は「その端末・そのブラウザ」に保存されます。  
+> 別の人の端末にタスクが見えることは基本ありませんが、同じPC/同じブラウザを複数人で共有すると履歴が残る可能性があります。
 
 ---
 
-## Third-party Services / Notes（重要：利用規約・権利）
-このアプリは OpenStreetMap の公開リソースを利用します。ポートフォリオ用途の「軽負荷アクセス」を前提としています。
+## Third-party Services / Notes（重要）
 
 ### OpenStreetMap Tiles
-地図タイルは `tile.openstreetmap.org`（OpenStreetMap公式の公開タイル）を使用しています。  
-公式タイルは **best-effort（SLAなし）** で、重い利用や不適切利用により **予告なくブロックされる可能性**があります。  [oai_citation:4‡OSMFオペレーションズ](https://operations.osmfoundation.org/policies/tiles/?utm_source=chatgpt.com)  
-※アクセスが増える用途では、タイルの自前運用や商用タイルプロバイダ利用を検討してください。  [oai_citation:5‡OSMFオペレーションズ](https://operations.osmfoundation.org/policies/tiles/?utm_source=chatgpt.com)
+地図タイルは OpenStreetMap の公開タイルサーバを利用しています。  
+公開タイルは **best-effort（SLAなし）** のため、アクセスが集中するような「重い利用」では制限される可能性があります。  
+本プロジェクトはポートフォリオ用途の少量アクセスを想定しています。
 
 ### Reverse Geocoding (Nominatim)
-地図クリック時の場所名取得に Nominatim（nominatim.openstreetmap.org）を利用しています。  
-Nominatimは利用ポリシー上、以下が必須です：  
-- **最大 1 request/sec（アプリ利用者の合計）**  [oai_citation:6‡OSMFオペレーションズ](https://operations.osmfoundation.org/policies/nominatim/?utm_source=chatgpt.com)  
-- **識別できる User-Agent / Referer**（標準UAは不可）  [oai_citation:7‡OSMFオペレーションズ](https://operations.osmfoundation.org/policies/nominatim/?utm_source=chatgpt.com)  
-- **適切な帰属表示**  [oai_citation:8‡OSMFオペレーションズ](https://operations.osmfoundation.org/policies/nominatim/?utm_source=chatgpt.com)  
+地図クリック時の場所名取得に Nominatim（OpenStreetMap）を利用しています。
 
-本アプリでは `src/app/api/reverse-geocode/route.ts` で簡易スロットル（連続呼び出し抑制）と、識別可能な User-Agent を付与しています。
+- 識別可能な `User-Agent` を付与
+- 連続アクセスを避けるための簡易スロットルを実装
+
+大量アクセスが想定される用途では、専用プロバイダ利用や自前運用等への切り替えが必要です。
 
 ---
 
 ## Setup（ローカル実行）
+
 ```bash
 npm install
 npm run dev

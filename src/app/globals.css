@@ -1,26 +1,178 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* FullCalendarをダーク寄りに調整 */
+.fc {
+  --fc-page-bg-color: transparent;
+  --fc-border-color: rgb(39 39 42);
+  --fc-neutral-bg-color: rgb(24 24 27);
+  --fc-neutral-text-color: rgb(228 228 231);
+  --fc-event-bg-color: rgb(244 244 245);
+  --fc-event-text-color: rgb(9 9 11);
+  --fc-today-bg-color: rgba(255, 255, 255, 0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.fc .fc-toolbar-title {
+  color: rgb(228 228 231);
+  font-weight: 700;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.fc .fc-button {
+  background: rgb(24 24 27);
+  border: 1px solid rgb(39 39 42);
+  color: rgb(228 228 231);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.fc .fc-button:hover {
+  background: rgb(39 39 42);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: rgb(244 244 245);
+  color: rgb(9 9 11);
+}
+
+/* =========================
+   ✅ 固定カラーパレット（taskId→色を固定）
+   - task-color-* が付くと CSS変数が入る
+   ========================= */
+.task-color-0  { --task-color: #22c55e; --task-color-bg: rgba(34,197,94,0.18); --task-color-bg-strong: rgba(34,197,94,0.32); }
+.task-color-1  { --task-color: #3b82f6; --task-color-bg: rgba(59,130,246,0.18); --task-color-bg-strong: rgba(59,130,246,0.32); }
+.task-color-2  { --task-color: #a855f7; --task-color-bg: rgba(168,85,247,0.18); --task-color-bg-strong: rgba(168,85,247,0.32); }
+.task-color-3  { --task-color: #f97316; --task-color-bg: rgba(249,115,22,0.18); --task-color-bg-strong: rgba(249,115,22,0.32); }
+.task-color-4  { --task-color: #ef4444; --task-color-bg: rgba(239,68,68,0.18); --task-color-bg-strong: rgba(239,68,68,0.32); }
+.task-color-5  { --task-color: #eab308; --task-color-bg: rgba(234,179,8,0.18); --task-color-bg-strong: rgba(234,179,8,0.32); }
+.task-color-6  { --task-color: #14b8a6; --task-color-bg: rgba(20,184,166,0.18); --task-color-bg-strong: rgba(20,184,166,0.32); }
+.task-color-7  { --task-color: #f472b6; --task-color-bg: rgba(244,114,182,0.18); --task-color-bg-strong: rgba(244,114,182,0.32); }
+.task-color-8  { --task-color: #06b6d4; --task-color-bg: rgba(6,182,212,0.18); --task-color-bg-strong: rgba(6,182,212,0.32); }
+.task-color-9  { --task-color: #84cc16; --task-color-bg: rgba(132,204,22,0.18); --task-color-bg-strong: rgba(132,204,22,0.32); }
+.task-color-10 { --task-color: #fb7185; --task-color-bg: rgba(251,113,133,0.18); --task-color-bg-strong: rgba(251,113,133,0.32); }
+.task-color-11 { --task-color: #60a5fa; --task-color-bg: rgba(96,165,250,0.18); --task-color-bg-strong: rgba(96,165,250,0.32); }
+
+/* ✅ TODOリストの色ドット（inline style禁止対応） */
+.task-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--task-color);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.28);
+  flex-shrink: 0;
+}
+
+/* =========================
+   ✅ FullCalendar: タスク表示（固定カラー）
+   ========================= */
+
+/* 通常イベント（週/日） */
+.fc .fc-event.task-event {
+  background: var(--task-color-bg) !important;
+  border: 1px solid var(--task-color-bg-strong) !important;
+  color: rgb(228 228 231) !important;
+}
+
+.fc .fc-event.task-event .fc-event-main {
+  color: rgb(228 228 231) !important;
+}
+
+.fc .fc-event.task-event.fc-event-selected,
+.fc .fc-event.task-event:focus {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.35);
+}
+
+/* ✅ 月表示の「期限レンジ」（背景） */
+.fc .fc-bg-event.deadline-range {
+  opacity: 1;
+  background: var(--task-color-bg) !important;
+}
+
+/* ✅ 月表示の「→期限ラベル」（ドラッグ可能な小さいタグ） */
+.fc .fc-event.deadline-label {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border: 1px solid var(--task-color-bg-strong) !important;
+  border-left: 8px solid var(--task-color) !important;
+  border-radius: 10px !important;
+  font-weight: 800;
+  padding: 0 6px !important;
+  color: rgb(228 228 231) !important;
+}
+
+.fc .fc-event.deadline-label .fc-event-main {
+  color: rgb(228 228 231) !important;
+}
+
+/* ✅ 月表示：期限レンジを「塗りつぶし」ではなく「線」にする */
+.fc .fc-event.deadline-range-line {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 2px 0 !important;
+  pointer-events: none !important; /* クリックできないように */
+}
+
+.fc .fc-event.deadline-range-line .fc-event-main {
+  padding: 0 !important;
+}
+
+/* 線の本体（タスク色を使う） */
+.fc .fc-event.deadline-range-line .deadline-range-line-inner {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--task-color);
+  opacity: 0.28;
+}
+
+/* ===== FullCalendar: 週/日表示のタスク枠を見やすくする ===== */
+
+/* timeGrid(週/日) のイベントを「カード」っぽく輪郭出す */
+.fc .fc-timegrid-event.task-event {
+  border-radius: 12px;
+  overflow: hidden;
+
+  /* 枠が消えないように強制 */
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+
+  /* グリッドと溶けないように少し背景 */
+  background: rgba(24, 24, 27, 0.92) !important; /* zinc-900 くらい */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35) inset,
+    0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* 左側に細いアクセントバー（どこまでがタスクか一瞬で分かる） */
+.fc .fc-timegrid-event.task-event::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+/* 未完了 */
+.fc .fc-timegrid-event.task-event.task-todo::before {
+  background: rgba(96, 165, 250, 0.9); /* 青系 */
+}
+
+/* 完了 */
+.fc .fc-timegrid-event.task-event.task-done {
+  opacity: 0.65;
+  border-style: dashed !important;
+}
+.fc .fc-timegrid-event.task-event.task-done::before {
+  background: rgba(163, 163, 163, 0.9);
+}
+
+/* 選択中をもっと分かりやすく（既存の task-selected を活用） */
+.fc .fc-timegrid-event.task-selected {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* 文字が枠に埋もれないように少し余白 */
+.fc .fc-timegrid-event .fc-event-main {
+  padding: 2px 6px;
 }

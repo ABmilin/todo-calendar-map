@@ -12,6 +12,9 @@
 > ※ デモはブラウザごとの `localStorage` を使用します（サーバ保存はしません）。  
 > ※ 位置情報（現在地）はブラウザの許可が必要です。
 
+## Screenshots
+
+![PC版: TODO/Calendar/Mapを3ペインで表示](docs/screenshots/desktop.png)
 ---
 
 ## Features

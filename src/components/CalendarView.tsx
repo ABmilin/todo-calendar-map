@@ -10,6 +10,7 @@ import type {
   EventClickArg,
   EventContentArg,
   EventDropArg,
+  EventInput,
 } from "@fullcalendar/core";
 
 import { useTaskStore } from "@/store/useTaskStore";
@@ -81,6 +82,9 @@ export default function CalendarView() {
 
   const mode = viewMode as ViewMode;
 
+  const findTask = (taskId: string): Task | undefined =>
+    tasks.find((t) => t.id === taskId);
+
   // ✅ viewMode変更 → FullCalendar側ビューも変更（1フレーム遅らせる）
   useEffect(() => {
     const api = calendarRef.current?.getApi();
@@ -91,16 +95,27 @@ export default function CalendarView() {
 
     const raf = requestAnimationFrame(() => {
       api.changeView(nextView);
+      // ついでにサイズも再計算（親の高さが変わるケースに強くする）
+      api.updateSize();
     });
 
     return () => cancelAnimationFrame(raf);
   }, [mode]);
 
-  const findTask = (taskId: string): Task | undefined =>
-    tasks.find((t) => t.id === taskId);
+  // ✅ 初回/リサイズ時に updateSize（MonthRulesPanel の開閉などで潰れやすい対策）
+  useEffect(() => {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+
+    const tick = () => requestAnimationFrame(() => api.updateSize());
+    tick();
+
+    window.addEventListener("resize", tick);
+    return () => window.removeEventListener("resize", tick);
+  }, []);
 
   // ✅ 通常イベント（予定化されたタスク）
-  const taskEvents = useMemo(() => {
+  const taskEvents: EventInput[] = useMemo(() => {
     return tasks
       .filter((t) => t.scheduledStart)
       .map((t) => {
@@ -124,21 +139,20 @@ export default function CalendarView() {
             memo: t.memo ?? "",
             kind: "task",
           } satisfies TaskEventExt,
-        };
+        } satisfies EventInput;
       });
   }, [tasks]);
 
   // ✅ 月表示：期限までの “細いレンジバー” ＋ “→期限ラベル”
-  const monthDeadlineEvents = useMemo(() => {
+  const monthDeadlineEvents: EventInput[] = useMemo(() => {
     if (mode !== "month") return [];
 
-    const list: Array<Record<string, unknown>> = [];
+    const list: EventInput[] = [];
 
     for (const t of tasks) {
       if (!t.scheduledStart || !t.dueAt) continue;
       if (t.status === "done") continue;
 
-      // ✅ ローカル日付で揃える（前日ズレ防止）
       const startDay = isoToDateOnlyLocal(String(t.scheduledStart));
       const dueDay = isoToDateOnlyLocal(String(t.dueAt));
 
@@ -279,11 +293,7 @@ export default function CalendarView() {
 
     // ✅ 月：→期限だけ出す
     if (mode === "month" && ext?.kind === "deadline-label") {
-      return (
-        <div className="px-1 text-[10px] leading-tight font-semibold">
-          →期限
-        </div>
-      );
+      return <div className="px-1 text-[10px] leading-tight font-semibold">→期限</div>;
     }
 
     // ✅ 週・日：情報をコンパクトに
@@ -316,21 +326,15 @@ export default function CalendarView() {
         {isDayOrWeek && (
           <div className="mt-1 text-[10px] opacity-85 space-y-0.5">
             {loc ? <div className="truncate">📍 {loc}</div> : null}
-            {memo ? (
-              <div className="opacity-80 truncate">📝 {memo}</div>
-            ) : null}
+            {memo ? <div className="opacity-80 truncate">📝 {memo}</div> : null}
             {arg.event.start ? (
-              <div className="opacity-70">
-                {formatTime(arg.event.start.toISOString())}
-              </div>
+              <div className="opacity-70">{formatTime(arg.event.start.toISOString())}</div>
             ) : null}
           </div>
         )}
 
         {arg.view.type === "timeGridDay" && dueAt ? (
-          <div className="mt-1 text-[10px] opacity-70">
-            期限日: {formatDate(dueAt)}
-          </div>
+          <div className="mt-1 text-[10px] opacity-70">期限日: {formatDate(dueAt)}</div>
         ) : null}
       </div>
     );
@@ -342,17 +346,13 @@ export default function CalendarView() {
     const taskId = ext?.taskId ?? info.event.id;
 
     const classes: string[] = [];
-
-    if (selectedTaskId && taskId === selectedTaskId) {
-      classes.push("task-selected");
-    }
-
+    if (selectedTaskId && taskId === selectedTaskId) classes.push("task-selected");
     return classes;
   };
 
   return (
-    <div className="h-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-zinc-100">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="h-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-zinc-100 flex flex-col min-h-0">
+      <div className="mb-2 flex items-center justify-between shrink-0">
         <div>
           <div className="text-lg font-semibold">Calendar</div>
           <div className="text-[11px] text-zinc-400 mt-0.5">
@@ -399,16 +399,13 @@ export default function CalendarView() {
         </div>
       </div>
 
-      <div className="h-[calc(100%-56px)]">
+      {/* ✅ ここが肝：残りの高さは flex-1 で確保（calc禁止） */}
+      <div className="flex-1 min-h-0">
         <FullCalendar
           ref={calendarRef}
           plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
           initialView={viewModeToFcView(mode)}
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "",
-          }}
+          headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
           height="100%"
           nowIndicator={true}
           editable={true}

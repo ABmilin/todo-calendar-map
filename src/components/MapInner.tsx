@@ -64,8 +64,33 @@ function Recenter({ center }: { center: [number, number] }) {
   const map = useMap();
 
   useEffect(() => {
+    // setView でOK（ズーム維持）
     map.setView(center, map.getZoom(), { animate: true });
   }, [center, map]);
+
+  return null;
+}
+
+// ✅ 親要素の高さ変更（警告パネル開閉など）で地図が空になる対策
+function InvalidateSizeOnLayoutChange() {
+  const map = useMap();
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      map.invalidateSize();
+    });
+
+    const onResize = () => {
+      requestAnimationFrame(() => map.invalidateSize());
+    };
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [map]);
 
   return null;
 }
@@ -74,7 +99,7 @@ export default function MapInner() {
   const {
     tasks,
     selectedTaskId,
-    updateTask, // ✅ ここを使う
+    updateTask,
     pickedLocation,
     setPickedLocation,
   } = useTaskStore();
@@ -82,7 +107,7 @@ export default function MapInner() {
   const [center, setCenter] = useState<[number, number]>(DEFAULT_CENTER);
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
 
-  // ローカルの「最後にクリックした位置」
+  // ローカルの「最後にクリックした位置」（地図上の“選択中”ピン表示用）
   const [lastPicked, setLastPicked] = useState<{
     lat: number;
     lng: number;
@@ -90,7 +115,7 @@ export default function MapInner() {
   } | null>(null);
 
   const tasksWithLoc = useMemo(() => {
-    return tasks.filter((t) => t.location);
+    return tasks.filter((t) => Boolean(t.location));
   }, [tasks]);
 
   // ✅ タスク選択が変わったら、その場所へ地図を移動（locationがある場合）
@@ -171,11 +196,9 @@ export default function MapInner() {
     );
   };
 
-
-
   return (
-    <div className="h-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-zinc-100">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="h-full rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-zinc-100 flex flex-col min-h-0">
+      <div className="mb-2 flex items-center justify-between shrink-0">
         <div className="text-lg font-semibold">Map</div>
 
         <button
@@ -186,24 +209,22 @@ export default function MapInner() {
         </button>
       </div>
 
-      <div className="mb-2 text-xs text-zinc-400">
+      <div className="mb-2 text-xs text-zinc-400 shrink-0">
         地図クリックでピン → 選択中TODOに場所反映（左のTODO or カレンダーをクリックして選択）
       </div>
 
       {/* ✅ pickedLocation表示 */}
-      <div className="mb-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200">
+      <div className="mb-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 shrink-0">
         <div className="mb-1 opacity-70">直近で選択した場所</div>
         <div className="font-semibold">
           {pickedLocation?.label ?? "（未選択）"}
         </div>
       </div>
 
-      <div className="h-[calc(100%-120px)] overflow-hidden rounded-2xl">
-        <MapContainer
-          center={center}
-          zoom={14}
-          style={{ height: "100%", width: "100%" }}
-        >
+      {/* ✅ ここが肝：残り領域を flex-1 で確保（calc禁止） */}
+      <div className="flex-1 min-h-0 overflow-hidden rounded-2xl">
+        <MapContainer center={center} zoom={14} style={{ height: "100%", width: "100%" }}>
+          <InvalidateSizeOnLayoutChange />
           <Recenter center={center} />
 
           <TileLayer
@@ -229,10 +250,7 @@ export default function MapInner() {
 
           {/* ✅ クリックした場所 */}
           {lastPicked && (
-            <Marker
-              position={[lastPicked.lat, lastPicked.lng]}
-              icon={DEFAULT_ICON}
-            >
+            <Marker position={[lastPicked.lat, lastPicked.lng]} icon={DEFAULT_ICON}>
               <Popup>
                 <div className="text-xs">
                   <div className="font-semibold">選択中</div>

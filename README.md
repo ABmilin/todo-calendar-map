@@ -11,6 +11,7 @@ PCでの操作を想定していますが、スマホでも表示できるよう
 
 - Demo: `https://todo-calendar-map.vercel.app`
 - Repository: `https://github.com/ABmilin/todo-calendar-map`
+- note: `https://note.com/engineerneer/n/ne136e8166773?sub_rt=share_pw`
 > ※ デモはブラウザごとの `localStorage` を使用します（サーバ保存はしません）。  
 > ※ 位置情報（現在地）はブラウザの許可が必要です。
 
